@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>RAG Assistant — Chat</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --accent: #06d6a0;
+            --accent-light: #34ffa6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes glow {
+            0%   { box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
+            50%  { box-shadow: 0 0 30px rgba(6, 214, 160, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
+        }
+
+        .listening {
+            animation: glow 1.5s ease-in-out infinite;
+        }
+
+        #historyList {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(6, 214, 160, 0.3) transparent;
+        }
+
+        #historyList::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #historyList::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #historyList::-webkit-scrollbar-thumb {
+            background: rgba(6, 214, 160, 0.3);
+            border-radius: 2px;
+        }
+
+        #historyList::-webkit-scrollbar-thumb:hover {
+            background: rgba(6, 214, 160, 0.6);
+        }
+
+        .history-item {
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(6, 214, 160, 0.2) !important;
+            transform: translateX(4px);
+        }
+
+        .new-chat-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: #000;
+            font-weight: 700;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(6, 214, 160, 0.4);
+        }
+
+        .voice-btn {
+            background: linear-gradient(135deg, #1a3a3a 0%, #0f2a2a 100%);
+            border: 1px solid rgba(6, 214, 160, 0.3);
+            color: var(--accent);
+            transition: all 0.2s ease;
+        }
+
+        .voice-btn:hover {
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.1) 0%, rgba(6, 214, 160, 0.05) 100%);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(6, 214, 160, 0.3);
+        }
+
+        .stop-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            border: none;
+            color: white;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .stop-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">✨ RAG Assistant</div>
+            <div class="nav">
+                <a href="chat.html" class="active">💬 Chat</a>
+                <a href="upload.html">📤 Upload</a>
+            </div>
+            <button onclick="startNewChat()" class="new-chat-btn" style="width:100%;margin-top:20px;padding:12px;border-radius:12px;border:none;cursor:pointer;">
+                ➕ New Chat
+            </button>
+
+            <div style="margin-top:24px;">
+                <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Previous Chats</div>
+                <div id="historyList" style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:6px;
+                    max-height:320px;
+                    overflow-y:auto;
+                "></div>
+            </div>
+
+            <div style="margin-top:auto;padding-top:20px;border-top:1px solid rgba(6,214,160,0.1);">
+                <div class="role-badge" id="roleBadge">👤 Role: —</div>
+                <button onclick="logout()" style="width:100%;margin-top:16px;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);color:white;font-weight:600;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 15px rgba(255,107,107,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 25px rgba(255,107,107,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(255,107,107,0.3)'">
+                    🚪 Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="panel">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-title">💡 Ask Your Documents</div>
+                    <div class="small muted" id="smallRole" style="margin-top:4px;font-size:12px;"></div>
+                </div>
+            </div>
+
+            <div class="messages" id="messages"></div>
+
+            <div style="flex-shrink: 0; margin-top: 12px; padding-bottom: 20px;">
+
+                <div class="composer">
+                    <textarea id="question" placeholder="Ask something from the PDF..." rows="2"></textarea>
+                    <button onclick="startVoice()" class="voice-btn" style="padding:10px 12px;border-radius:10px;cursor:pointer;font-size:16px;height:48px;display:flex;align-items:center;justify-content:center;">
+                        🎤
+                    </button>
+                    <button id="sendBtn" style="padding:12px 24px;">Send</button>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+                    <button id="voiceToggle" onclick="toggleVoiceMode()" class="voice-btn" style="padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;">
+                        🎙 Voice: OFF
+                    </button>
+                    <button onclick="stopSpeaking()" class="stop-btn" style="padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;">
+                        🔊 Stop
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // initialize
+        let voiceMode = false;
+        let recognition;
+        let lastInputWasVoice = false;
+        let lastShownImages = [];  // Track last shown images for context
+
+        const token = localStorage.getItem('token');
+        if (!token) { alert('Please login first'); window.location.href = 'login.html'; }
+        const role = localStorage.getItem('role') || '—';
+        document.getElementById('roleBadge').innerText = '👤 Role: ' + role;
+        document.getElementById('smallRole').innerText = role;
+
+        const messagesEl = document.getElementById('messages');
+
+        function appendMessage(text, who = 'bot', meta = ''){
+            const div = document.createElement('div');
+            div.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
+            
+            // For bot messages, render markdown
+            if (who === 'bot') {
+                div.innerHTML = '<div>' + marked.parse(text) + '</div>' + (meta?('<div class="meta">'+meta+'</div>'):'');
+            } else {
+                // For user messages, just show text as-is
+                div.innerHTML = '<div>' + text.replace(/\n/g,'<br>') + '</div>' + (meta?('<div class="meta">'+meta+'</div>'):'');
+            }
+            
+            messagesEl.appendChild(div);
+            
+            // Scroll to bottom with a slight delay to ensure DOM update
+            setTimeout(() => {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }, 0);
+        }
+
+        function stopSpeaking(){
+            window.speechSynthesis.cancel();
+        }
+
+        function logout(){
+            localStorage.removeItem('role');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        function toggleVoiceMode(){
+            voiceMode = !voiceMode;
+            const btn = document.getElementById("voiceToggle");
+            if(voiceMode){
+                btn.innerText = "🎙 Voice: ON";
+                startVoiceConversation();
+            }else{
+                btn.innerText = "🎙 Voice: OFF";
+                btn.classList.remove("listening");
+                if(recognition) recognition.stop();
+            }
+        }
+
+        function startVoiceConversation(){
+            document.getElementById("voiceToggle").classList.add("listening");
+
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Voice not supported in this browser");
+                return;
+            }
+
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.continuous = false;
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                lastInputWasVoice = true;
+                document.getElementById("question").value = text;
+                setTimeout(() => {
+                    askQuestion();
+                }, 400);
+            };
+        }
+
+        function showTyping(){
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.id = 'typingIndicator';
+            div.innerHTML = 'Thinking<span id="dots">.</span>';
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+            let count = 0;
+            window.typingInterval = setInterval(() => {
+                const dots = document.getElementById('dots');
+                count = (count + 1) % 4;
+                dots.innerText = '.'.repeat(count);
+            }, 400);
+        }
+
+        function startVoice(){
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Voice recognition not supported in this browser");
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = false;
+            recognition.start();
+
+            recognition.onstart = () => {
+                appendMessage("🎤 Listening...", "bot");
+            };
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                document.getElementById("question").value = text;
+                askQuestion();
+            };
+
+            recognition.onerror = (event) => {
+                console.log("Voice error:", event.error);
+            };
+        }
+
+        function hideTyping(){
+            clearInterval(window.typingInterval);
+            const el = document.getElementById('typingIndicator');
+            if(el) el.remove();
+        }
+
+        function startNewChat(){
+            messagesEl.innerHTML = '';
+            appendMessage('🎉 New conversation started. Ask something!', 'bot');
+        }
+
+        async function loadHistory(){
+            try{
+                const res = await fetch('http://127.0.0.1:8000/history', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await res.json();
+                const list = document.getElementById('historyList');
+                list.innerHTML = '';
+
+                data.history.reverse().forEach(chat => {
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.style.cssText = `
+                        cursor: pointer;
+                        font-size: 12px;
+                        color: rgba(255,255,255,0.7);
+                        padding: 8px 10px;
+                        border-radius: 8px;
+                        background: rgba(255,255,255,0.02);
+                        border: 1px solid rgba(6,214,160,0.1);
+                        word-break: break-word;
+                    `;
+                    item.innerText = '📝 ' + (chat.question.substring(0, 40) + (chat.question.length > 40 ? '...' : ''));
+
+                    item.onclick = () => {
+                        messagesEl.innerHTML = '';
+                        appendMessage(chat.question,'user');
+                        appendMessage(chat.answer,'bot');
+                    };
+
+                    list.appendChild(item);
+                });
+            }catch(e){
+                console.log("History load failed");
+            }
+        }
+
+        function speakText(text){
+            document.getElementById("voiceToggle").classList.remove("listening");
+
+            const speech = new SpeechSynthesisUtterance(text);
+            const voices = window.speechSynthesis.getVoices();
+            const femaleVoice = voices.find(v =>
+                v.name.toLowerCase().includes("zira") ||
+                v.name.toLowerCase().includes("google")
+            );
+
+            if (femaleVoice) speech.voice = femaleVoice;
+            speech.rate = 0.95;
+            speech.pitch = 1.2;
+
+            speech.onend = () => {
+                if (voiceMode) {
+                    startVoiceConversation();
+                }
+            };
+
+            window.speechSynthesis.speak(speech);
+        }
+
+        async function askQuestion(){
+            if(!voiceMode){
+                lastInputWasVoice = false;
+            }
+
+            const q = document.getElementById('question').value.trim();
+            if (!q) return;
+            appendMessage(q,'user');
+            showTyping();
+
+            document.getElementById('question').value = '';
+
+            try{
+                // Check if user is asking about an image in the current context
+                const isImageQuestion = /highlighted|above image|image|diagram|blueprint|schematic|what.*shown/i.test(q);
+                let requestBody = {question: q, role: role};
+                
+                // If asking about an image and we have a last shown image, include it
+                if (isImageQuestion && lastShownImages.length > 0) {
+                    requestBody.last_image = lastShownImages[0];
+                }
+                
+                const res = await fetch('http://127.0.0.1:8000/ask',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+                    body:JSON.stringify(requestBody)
+                });
+                const data = await res.json();
+                
+                // Hide typing indicator before showing answer
+                hideTyping();
+                
+                if (data.answer) {
+                    // Create a container for the response with better structure
+                    const responseContainer = document.createElement('div');
+                    responseContainer.style.cssText = `
+                        display: flex;
+                        flex-direction: column;
+                        gap: 16px;
+                        padding: 0;
+                    `;
+                    
+                    // Add main answer
+                    appendMessage(data.answer, 'bot', 'Source: ' + data.source);
+                    
+                    // Show images with proper structure if available
+                    if (data.images && data.images.length > 0) {
+                        // Track shown images for context
+                        lastShownImages = data.images;
+                        
+                        data.images.forEach(img => {
+                            const imageWrapper = document.createElement('div');
+                            imageWrapper.style.cssText = `
+                                margin-top: 12px;
+                                padding: 12px;
+                                background: rgba(6, 214, 160, 0.05);
+                                border: 1px solid rgba(6, 214, 160, 0.2);
+                                border-radius: 12px;
+                                overflow: hidden;
+                            `;
+                            
+                            const image = document.createElement('img');
+                            image.src = 'http://127.0.0.1:8000/extracted_images/' + img;
+                            image.style.cssText = `
+                                max-width: 100%;
+                                height: auto;
+                                border-radius: 8px;
+                                display: block;
+                            `;
+                            
+                            // Show highlighted image if available (from image_analysis)
+                            if (data.image_details && data.image_details.length > 0) {
+                                const detail = data.image_details.find(d => d.image === img);
+                                if (detail && detail.highlighted_image) {
+                                    image.src = detail.highlighted_image;
+                                }
+                            }
+                            
+                            imageWrapper.appendChild(image);
+                            messagesEl.appendChild(imageWrapper);
+                        });
+                    }
+                    
+                    // Show image interpretations if available
+                    if (data.image_details && data.image_details.length > 0 && data.analysis_type === 'image_analysis') {
+                        data.image_details.forEach(detail => {
+                            if (detail.interpretation) {
+                                const interpretationBox = document.createElement('div');
+                                interpretationBox.style.cssText = `
+                                    margin-top: 12px;
+                                    padding: 16px;
+                                    background: rgba(6, 214, 160, 0.08);
+                                    border-left: 3px solid rgba(6, 214, 160, 0.6);
+                                    border-radius: 8px;
+                                    font-size: 14px;
+                                    line-height: 1.6;
+                                    color: rgba(255, 255, 255, 0.85);
+                                `;
+                                interpretationBox.innerHTML = '<strong>🔍 Image Analysis:</strong><br>' + 
+                                    marked.parse(detail.interpretation);
+                                messagesEl.appendChild(interpretationBox);
+                            }
+                        });
+                    }
+                    
+                    // Scroll to bottom
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                }
+                else {
+                    appendMessage('No answer returned from server','bot');
+                }
+            }catch(err){
+                hideTyping();
+                appendMessage('❌ Error contacting server: '+err.message,'bot');
+            }
+        }
+
+        document.getElementById('sendBtn').addEventListener('click', askQuestion);
+        document.getElementById('question').addEventListener('keydown', (e)=>{
+            if (e.key === 'Enter' && !e.shiftKey){
+                e.preventDefault();
+                askQuestion();
+            }
+        });
+
+        appendMessage('👋 Welcome! Ask a question about your documents.','bot');
+        loadHistory();
+    </script>
+</body>
+</html>

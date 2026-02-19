@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Login — RAG Assistant</title>
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            .login-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .login-container::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(6, 214, 160, 0.1) 0%, transparent 70%);
+                animation: float 20s ease-in-out infinite;
+                pointer-events: none;
+            }
+
+            @keyframes float {
+                0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                50% { transform: translate(50px, -50px) rotate(180deg); }
+            }
+
+            .card {
+                position: relative;
+                z-index: 1;
+            }
+
+            .form-input {
+                transition: all 0.3s ease;
+            }
+
+            .form-input:focus {
+                transform: translateY(-2px);
+            }
+
+            .login-btn {
+                width: 100%;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .login-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+                transition: left 0.3s ease;
+            }
+
+            .login-btn:hover::before {
+                left: 100%;
+            }
+
+            .signup-link {
+                text-align: center;
+                margin-top: 20px;
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 13px;
+            }
+
+            .signup-link a {
+                color: var(--accent);
+                text-decoration: none;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+
+            .signup-link a:hover {
+                color: var(--accent-light);
+                text-decoration: underline;
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--accent);
+                font-size: 16px;
+            }
+
+            .form-group-icon input {
+                padding-left: 36px !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="card">
+                <div style="text-align: center; margin-bottom: 36px;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">🔐</div>
+                    <h2 style="margin:0;">Welcome Back</h2>
+                    <p style="color: var(--muted); margin: 8px 0 0 0; font-size: 13px;">Sign in to your account</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="small muted">Username</label>
+                    <div class="form-group-icon" style="position: relative;">
+                        <span class="input-icon">👤</span>
+                        <input id="username" class="form-input" placeholder="Enter your username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="small muted">Password</label>
+                    <div class="form-group-icon" style="position: relative;">
+                        <span class="input-icon">🔑</span>
+                        <input id="password" class="form-input" type="password" placeholder="Enter your password">
+                    </div>
+                </div>
+
+                <button class="primary login-btn" onclick="login()" style="margin-top: 24px;">
+                    ✨ Login
+                </button>
+
+                <div id="msg" style="color:var(--accent);font-weight:600;margin-top:16px;text-align:center;min-height:20px;"></div>
+
+                <div class="signup-link">
+                    Don't have an account? <a href="signup.html">Create one now</a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function login(){
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                if(!username||!password){ 
+                    document.getElementById('msg').innerText = '⚠️ Enter credentials'; 
+                    return; 
+                }
+
+                try{
+                    const res = await fetch('http://127.0.0.1:8000/login',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({username,password})
+                    });
+                    const data = await res.json();
+                    if(data.access_token){
+                        localStorage.setItem('role', data.role);
+                        localStorage.setItem('token', data.access_token);
+                        document.getElementById('msg').innerText = '✅ Login successful';
+                        setTimeout(()=>location.href='chat.html',500);
+                    } else { 
+                        document.getElementById('msg').innerText = data.detail || '❌ Invalid credentials'; 
+                    }
+                }catch(e){ 
+                    document.getElementById('msg').innerText = '❌ Error: '+e.message;
+                }
+            }
+
+            document.getElementById('password').addEventListener('keydown', (e) => {
+                if(e.key === 'Enter') login();
+            });
+        </script>
+    </body>
+</html>

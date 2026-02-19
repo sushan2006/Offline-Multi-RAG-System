@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Upload — RAG Assistant</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        .upload-area {
+            border: 2px dashed rgba(6, 214, 160, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.05) 0%, rgba(6, 214, 160, 0.02) 100%);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.1) 0%, rgba(6, 214, 160, 0.05) 100%);
+            box-shadow: 0 0 20px rgba(6, 214, 160, 0.2);
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.15) 0%, rgba(6, 214, 160, 0.08) 100%);
+            box-shadow: 0 0 30px rgba(6, 214, 160, 0.3);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #file {
+            display: none;
+        }
+
+        .file-selected {
+            color: var(--accent);
+            font-weight: 600;
+            padding: 8px 12px;
+            background: rgba(6, 214, 160, 0.1);
+            border-radius: 8px;
+            margin-top: 12px;
+            display: inline-block;
+            border: 1px solid rgba(6, 214, 160, 0.3);
+        }
+
+        select {
+            width: 100%;
+        }
+
+        .upload-status {
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .upload-status.success {
+            background: rgba(81, 207, 102, 0.1);
+            border: 1px solid rgba(81, 207, 102, 0.3);
+            color: #51cf66;
+            display: block;
+        }
+
+        .upload-status.error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            display: block;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">✨ RAG Assistant</div>
+        <div class="nav">
+          <a href="chat.html">💬 Chat</a>
+          <a href="upload.html" class="active">📤 Upload</a>
+        </div>
+        <div style="margin-top:auto;padding-top:20px;border-top:1px solid rgba(6,214,160,0.1);">
+          <a href="login.html" onclick="localStorage.removeItem('role'); localStorage.removeItem('token');" style="color:rgba(255,107,107,0.8);text-decoration:none;display:block;font-size:13px;font-weight:500;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ff6b6b'" onmouseout="this.style.color='rgba(255,107,107,0.8)'">🚪 Logout</a>
+        </div>
+      </aside>
+
+      <main class="panel">
+        <div style="margin-bottom: 32px;">
+          <h3 style="margin:0 0 8px 0; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            📚 Upload Documents
+          </h3>
+          <p style="color: var(--muted); margin: 4px 0 0 0; font-size: 13px;">Add knowledge to your RAG system</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('file').click()">
+          <div class="upload-icon">📥</div>
+          <div style="font-weight: 600; color: var(--accent); margin-bottom: 8px;">Drop your PDF here</div>
+          <div style="color: var(--muted); font-size: 13px;">or click to browse</div>
+          <div id="fileName" class="file-selected" style="display: none;"></div>
+        </div>
+
+        <div class="form-group" style="margin-top: 24px;">
+          <label class="small muted">📋 Assign Category</label>
+          <select id="role" style="padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(6, 214, 160, 0.2); background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); color: inherit; font-family: inherit; font-size: 14px; cursor: pointer;">
+            <option value="HR">📊 HR — Human Resources</option>
+            <option value="DEV">⚙️ DEV — Development</option>
+            <option value="ADMIN">👑 ADMIN — Administration</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;">
+          <button class="primary" onclick="upload()" style="padding: 14px 24px;">
+            🚀 Upload
+          </button>
+          <div id="msg" class="small muted" style="flex: 1; min-height: 16px;"></div>
+        </div>
+
+        <div id="status" class="upload-status"></div>
+      </main>
+    </div>
+
+    <script>
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('file');
+      const fileNameEl = document.getElementById('fileName');
+
+      // Drag and drop
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+          uploadArea.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+          uploadArea.classList.remove('drag-over');
+        });
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updateFileName();
+      });
+
+      fileInput.addEventListener('change', updateFileName);
+
+      function updateFileName() {
+        if (fileInput.files.length > 0) {
+          fileNameEl.innerText = '✓ ' + fileInput.files[0].name;
+          fileNameEl.style.display = 'inline-block';
+        } else {
+          fileNameEl.style.display = 'none';
+        }
+      }
+
+      async function upload(){
+        const fileInput = document.getElementById('file');
+        const role = document.getElementById('role').value;
+        const msgEl = document.getElementById('msg');
+        const statusEl = document.getElementById('status');
+
+        if(!fileInput.files.length){ 
+          msgEl.innerText = '⚠️ Choose a PDF file';
+          return; 
+        }
+
+        msgEl.innerText = '⏳ Uploading...';
+        statusEl.className = 'upload-status';
+        statusEl.innerText = '';
+
+        const fd = new FormData();
+        fd.append('file', fileInput.files[0]);
+        fd.append('role', role);
+
+        try{
+          const token = localStorage.getItem('token');
+          const res = await fetch('http://127.0.0.1:8000/upload',{
+            method:'POST',
+            body:fd, 
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          const data = await res.json();
+          
+          if(data.message) {
+            msgEl.innerText = '';
+            statusEl.className = 'upload-status success';
+            statusEl.innerText = '✅ ' + (data.message || 'File uploaded successfully!');
+            fileInput.value = '';
+            updateFileName();
+          } else {
+            statusEl.className = 'upload-status error';
+            statusEl.innerText = '❌ ' + (data.detail || 'Upload failed');
+            msgEl.innerText = '';
+          }
+        }catch(e){ 
+          statusEl.className = 'upload-status error';
+          statusEl.innerText = '❌ Upload error: ' + e.message;
+          msgEl.innerText = '';
+        }
+      }
+    </script>
+  </body>
+</html>
