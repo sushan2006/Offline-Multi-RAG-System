@@ -314,14 +314,22 @@ def get_metadata_for_answer(answer: str, question: str, matched_indices: List[in
         prefix = f"{src}_page{page}_"
         image_prefixes.add(prefix)
     
+    # Proactive search: If asking for diagram, check all images for these books
+    is_diagram_request = any(word in question.lower() for word in ["diagram", "image", "show", "picture", "figure"])
+    
     # Get all available images
     if os.path.exists("extracted_images"):
         for img in os.listdir("extracted_images"):
-            # Check if image starts with any of the relevant prefixes
-            for prefix in image_prefixes:
-                if img.startswith(prefix):
+            # If diagram requested, broaden search to all images in relevant PDFs
+            if is_diagram_request:
+                if any(src in img for src in set(relevant_sources)):
                     candidate_images.append(img)
-                    break
+            else:
+                # Normal mode: only images on the same page as text
+                for prefix in image_prefixes:
+                    if img.startswith(prefix):
+                        candidate_images.append(img)
+                        break
     
     # Remove duplicates
     candidate_images = list(set(candidate_images))
@@ -349,7 +357,7 @@ def get_metadata_for_answer(answer: str, question: str, matched_indices: List[in
                     page_num = int(page_num)
                     pdf_source = next((src for src in set(relevant_sources) if src in img), None)
                     if pdf_source:
-                        pdf_path = os.path.join("../documents", pdf_source)
+                        pdf_path = os.path.join("documents", pdf_source) # Fixed path
                         if os.path.exists(pdf_path):
                             from pypdf import PdfReader
                             reader = PdfReader(pdf_path)
