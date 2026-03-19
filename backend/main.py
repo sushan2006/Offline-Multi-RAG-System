@@ -32,7 +32,20 @@ user_image_sessions: Dict[str, List[str]] = {}
 
 app = FastAPI()
 
+# --- Serve Static Media Files ---
+# Mount images folder
 app.mount("/extracted_images", StaticFiles(directory="extracted_images"), name="images")
+
+# Mount PDF previews (admin)
+if not os.path.exists("documents"): os.makedirs("documents")
+app.mount("/documents", StaticFiles(directory="documents"), name="documents")
+
+
+@app.get("/")
+async def read_index():
+    """Serve the login page at the root"""
+    frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    return FileResponse(os.path.join(frontend_path, "login.html"))
 
 
 class AskRequest(BaseModel):
@@ -760,4 +773,8 @@ def locate_part_in_image(
     
     result = locate_and_highlight_part(image_path, req.part_name)
     return result
+
+# --- FALLBACK: Serve all other frontend files (.html, .js, .css) ---
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+app.mount("/", StaticFiles(directory=frontend_path), name="frontend_root")
 
