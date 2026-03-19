@@ -23,15 +23,17 @@ $tmpFile = "$env:TEMP\tunnel_out.txt"
 if (Test-Path $tmpFile) { Remove-Item $tmpFile }
 
 # Start cloudflared and wait for it to generate a URL
-$process = Start-Process $cfExe -ArgumentList "tunnel", "--url", "http://localhost:8000" -NoNewWindow -PassThru -RedirectStandardError $tmpFile
+# Redirect both stdout and stderr since cloudflared logs can vary
+$process = Start-Process $cfExe -ArgumentList "tunnel", "--url", "http://localhost:8000" -NoNewWindow -PassThru -RedirectStandardError $tmpFile -RedirectStandardOutput $tmpFile
 
 Write-Host "Waiting for public URL..." -ForegroundColor Gray
 $tunnelUrl = ""
 $retry = 0
-while ($retry -lt 20 -and -not $tunnelUrl) {
+while ($retry -lt 25 -and -not $tunnelUrl) {
     Start-Sleep -Seconds 1
     if (Test-Path $tmpFile) {
-        $content = Get-Content $tmpFile
+        # Read as a single raw string to ensure $matches is populated correctly
+        $content = Get-Content $tmpFile -Raw
         if ($content -match "https://[a-zA-Z0-9-]+\.trycloudflare\.com") {
             $tunnelUrl = $matches[0]
         }
@@ -60,5 +62,5 @@ window.API_CONFIG = API_CONFIG;
     Write-Host "Press Ctrl+C in the other window to stop the server." -ForegroundColor Gray
 } else {
     Write-Host "Failed to detect Cloudflare URL. Please ensure 'cloudflared' is installed and your internet is active." -ForegroundColor Red
-    if (Test-Path $tmpFile) { Get-Content $tmpFile }
+    Write-Host "Check details in: $tmpFile" -ForegroundColor Gray
 }
