@@ -300,7 +300,8 @@ def get_metadata_for_answer(answer: str, question: str, matched_indices: List[in
     relevant_pages = []
     relevant_sources = []
     
-    for idx in matched_indices:
+    # Use only the top 2 most relevant matched chunks for image selection
+    for idx in matched_indices[:2]:
         # Check permissions after retrieval
         if chunk_roles[idx] == role_to_query or role_to_query == "ADMIN":
             relevant_pages.append(chunk_pages[idx])
@@ -314,75 +315,18 @@ def get_metadata_for_answer(answer: str, question: str, matched_indices: List[in
         prefix = f"{src}_page{page}_"
         image_prefixes.add(prefix)
     
-    # Proactive search: If asking for diagram, check all images for these books
-    is_diagram_request = any(word in question.lower() for word in ["diagram", "image", "show", "picture", "figure"])
-    
-    # Get all available images
+    # Get all available images on the pages where we found text
     if os.path.exists("extracted_images"):
         for img in os.listdir("extracted_images"):
-            # If diagram requested, broaden search to all images in relevant PDFs
-            if is_diagram_request:
-                if any(src in img for src in set(relevant_sources)):
+            # Check if image starts with any of the relevant prefixes
+            for prefix in image_prefixes:
+                if img.startswith(prefix):
                     candidate_images.append(img)
-            else:
-                # Normal mode: only images on the same page as text
-                for prefix in image_prefixes:
-                    if img.startswith(prefix):
-                        candidate_images.append(img)
-                        break
+                    break
     
-    # Remove duplicates
-    candidate_images = list(set(candidate_images))
-    
-    # Extract rule/section references from the question and answer
-    rule_references = set()
-    
-    # Search in question and answer
-    rule_matches = re.findall(r'RULE\s+(\d+)', question + " " + answer, re.IGNORECASE)
-    rule_references.update(rule_matches)
-    
-    # Also search for section references like "25(c)", "27(a)", etc
-    section_matches = re.findall(r'(?:RULE\s+)?(\d+)\s*\(', answer, re.IGNORECASE)
-    rule_references.update(section_matches)
-    
-    related_images = []
-    
-    # If we found specific rule references, use them to filter images
-    if rule_references and candidate_images:
-        for img in candidate_images:
-            parts = img.rsplit('_', 2)
-            if len(parts) >= 3:
-                page_num = parts[1].replace('page', '')
-                try:
-                    page_num = int(page_num)
-                    pdf_source = next((src for src in set(relevant_sources) if src in img), None)
-                    if pdf_source:
-                        pdf_path = os.path.join("documents", pdf_source) # Fixed path
-                        if os.path.exists(pdf_path):
-                            from pypdf import PdfReader
-                            reader = PdfReader(pdf_path)
-                            if page_num < len(reader.pages):
-                                page_text = reader.pages[page_num].extract_text()
-                                if any(re.search(rf'RULE\s+{rule_ref}(?:\s|[^0-9]|$)', page_text, re.IGNORECASE) for rule_ref in rule_references):
-                                    related_images.append(img)
-                except: related_images.append(img)
-    
-    if not related_images and candidate_images:
-        # If it was a BROAD diagram request, we MUST be strict. 
-        # Don't show everything if we couldn't find the specific rule.
-        if is_diagram_request:
-            # Re-filter candidate_images to ONLY those on the matched pages (original safe behavior)
-            for img in candidate_images:
-                for prefix in image_prefixes:
-                    if img.startswith(prefix):
-                        related_images.append(img)
-                        break
-        else:
-            # Normal mode: showing page-specific candidates is the goal
-            related_images = candidate_images
-    
-    # Final safety: remove duplicates
-    related_images = list(set(related_images))
+    # Remove duplicates and limit to just 1 most relevant image
+    candidate_images = list(set(candidate_images))[:1]
+    related_images = candidate_images
     
     store_images_for_user(username, related_images)
     
@@ -390,6 +334,7 @@ def get_metadata_for_answer(answer: str, question: str, matched_indices: List[in
         "sources": list(set(relevant_sources)),
         "images": related_images
     }
+    
 
 @app.post("/ask_stream")
 async def ask_stream(req: AskRequest, current_user: dict = Depends(get_current_user)):

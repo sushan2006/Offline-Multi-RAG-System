@@ -20,22 +20,27 @@ Write-Host "Note: If you do not have 'cloudflared' installed, download it from h
 
 # Use a temporary file to capture the tunnel URL
 $tmpFile = "$env:TEMP\tunnel_out.txt"
-if (Test-Path $tmpFile) { Remove-Item $tmpFile }
+Remove-Item $tmpFile -ErrorAction SilentlyContinue
 
 # Start cloudflared and wait for it to generate a URL
 # Redirect both stdout and stderr since cloudflared logs can vary
-$process = Start-Process $cfExe -ArgumentList "tunnel", "--url", "http://localhost:8000" -NoNewWindow -PassThru -RedirectStandardError $tmpFile -RedirectStandardOutput $tmpFile
+$errFile = "$env:TEMP\tunnel_err.txt"
+Remove-Item $errFile -ErrorAction SilentlyContinue
+$process = Start-Process $cfExe -ArgumentList "tunnel", "--url", "http://localhost:8000" -NoNewWindow -PassThru -RedirectStandardError $errFile -RedirectStandardOutput $tmpFile
 
 Write-Host "Waiting for public URL..." -ForegroundColor Gray
 $tunnelUrl = ""
 $retry = 0
 while ($retry -lt 25 -and -not $tunnelUrl) {
     Start-Sleep -Seconds 1
-    if (Test-Path $tmpFile) {
-        # Read as a single raw string to ensure $matches is populated correctly
-        $content = Get-Content $tmpFile -Raw
-        if ($content -match "https://[a-zA-Z0-9-]+\.trycloudflare\.com") {
-            $tunnelUrl = $matches[0]
+    # Check both stdout and stderr files
+    foreach ($file in $tmpFile, $errFile) {
+        if (Test-Path $file) {
+            $content = Get-Content $file -Raw
+            if ($content -match "https://[a-zA-Z0-9-]+\.trycloudflare\.com") {
+                $tunnelUrl = $matches[0]
+                break
+            }
         }
     }
     $retry++

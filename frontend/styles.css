@@ -262,6 +262,27 @@ body::after {
 }
 .msg.bot pre code { background: none; padding: 0; color: rgba(255,255,255,0.85); }
 
+/* ── IMAGES IN CHAT ─────────────────────────── */
+.image-result {
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(168,85,247,0.25);
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+.image-result img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  max-height: 450px;
+  cursor: zoom-in;
+  transition: transform 0.2s;
+}
+.image-result img:hover { transform: scale(1.02); }
+
 /* ── COMPOSER ────────────────────────────────── */
 .composer {
   display: flex;

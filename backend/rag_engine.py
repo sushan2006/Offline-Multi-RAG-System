@@ -6,6 +6,7 @@ import ollama
 import fitz
 import os
 import cv2
+import re
 from PIL import Image, ImageDraw, ImageFont
 import base64
 from io import BytesIO
@@ -159,16 +160,113 @@ def create_index(chunks):
     return index
 
 
+# ----------- FILTER OUT NOISY CHUNKS -----------
+def is_noisy_chunk(chunk: str) -> bool:
+    """
+    Detect if a chunk is just repetitive placeholder descriptions (OCR artifacts, formatting errors, etc.)
+    Returns True if chunk should be filtered out.
+    """
+    # Patterns that indicate a noisy/repetitive chunk
+    noisy_patterns = [
+        r"(Upper|Lower|Right|Left)\s+(Light|Shape|Signal):\s*A\s+single",  # "Upper Light: A single line..."
+        r"\d+\.\s+(Upper|Lower|Right|Left)\s+(Light|Shape|Signal):",  # Numbered list of same
+    ]
+    
+    # Check if chunk is very short (likely incomplete)
+    if len(chunk.strip().split()) < 5:
+        return True
+    
+    # Count how many lines match the noisy patterns
+    lines = chunk.split('\n')
+    noisy_line_count = 0
+    for line in lines:
+        for pattern in noisy_patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                noisy_line_count += 1
+                break
+    
+    # If more than 50% of lines are noisy patterns, filter it out
+    if lines and noisy_line_count / len(lines) > 0.5:
+        return True
+    
+    return False
+
+
+def filter_chunks(chunks_list: list) -> list:
+    """Remove noisy chunks from a list of chunks"""
+    return [c for c in chunks_list if not is_noisy_chunk(c)]
+
+
+def extract_rule_number(question: str) -> str:
+    """Extract rule number from question if mentioned. Returns 'RULE XX' format or empty string."""
+    import re
+    # Look for patterns like "Rule 30", "rule 30", "RULE 30", "about rule 30", etc.
+    match = re.search(r'(?:rule|rules)\s+(\d+)', question, re.IGNORECASE)
+    if match:
+        rule_num = match.group(1)
+        return f"RULE {rule_num}"  # Return in uppercase for consistency
+    return ""
+
+
+def filter_by_rule(chunks_list: list, indices: list, rule_pattern: str) -> tuple:
+    """
+    Filter chunks to only those containing the specific rule.
+    Returns (filtered_chunks, filtered_indices)
+    """
+    filtered_chunks = []
+    filtered_indices = []
+    
+    for chunk, idx in zip(chunks_list, indices):
+        # Check if chunk contains the rule pattern (case insensitive)
+        if re.search(re.escape(rule_pattern), chunk, re.IGNORECASE):
+            filtered_chunks.append(chunk)
+            filtered_indices.append(idx)
+    
+    return filtered_chunks, filtered_indices
+
+
 # ----------- ASK QUESTION -----------
 def ask_question(question, index, chunks, history=None, return_indices=False):
     """Sync version of ask_question (for backward compatibility)"""
     q_embedding = model.encode([question], convert_to_numpy=True)
-    D, I = index.search(np.array(q_embedding, dtype='float32'), k=2)
+    # Retrieve top 15 candidates to have more options after rule filtering
+    D, I = index.search(np.array(q_embedding, dtype='float32'), k=15)
 
     context = ""
-    matched_indices = I[0].tolist()
-    for i in matched_indices:
-        context += chunks[i] + "\n"
+    matched_indices = []
+    valid_chunks = []
+    
+    # Check if user is asking about a specific rule
+    rule_pattern = extract_rule_number(question)
+    
+    # Get candidates
+    candidate_chunks = [chunks[int(idx)] for idx in I[0]]
+    candidate_indices = [int(idx) for idx in I[0]]
+    
+    # If asking about a specific rule, filter to only that rule
+    if rule_pattern:
+        filtered_chunks, filtered_indices = filter_by_rule(candidate_chunks, candidate_indices, rule_pattern)
+        if filtered_chunks:  # Use filtered results if we found the rule
+            candidate_chunks = filtered_chunks
+            candidate_indices = filtered_indices
+    
+    
+    # Build context from filtered chunks
+    for chunk in candidate_chunks:
+        if not is_noisy_chunk(chunk):
+            valid_chunks.append(chunk)
+            matched_indices.append(candidate_indices[candidate_chunks.index(chunk)])
+            context += chunk + "\n"
+    
+    # If we filtered out too many chunks, include some noisy ones (better than empty context)
+    if len(valid_chunks) < 3:
+        for chunk in candidate_chunks:
+            if chunk not in valid_chunks:
+                valid_chunks.append(chunk)
+                matched_indices.append(candidate_indices[candidate_chunks.index(chunk)])
+                context += chunk + "\n"
+                if len(valid_chunks) >= 3:
+                    break
 
     history_text = ""
     if history:
@@ -182,7 +280,7 @@ def ask_question(question, index, chunks, history=None, return_indices=False):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Previous Conversation:\n{history_text}\n\nContext:\n{context}\n\nQuestion: {question}"}
             ],
-            options={"num_predict": 256, "temperature": 0.1}
+            options={"num_predict": 1024, "temperature": 0.1}
         )
         answer = response['message']['content']
     except Exception as e:
@@ -196,12 +294,43 @@ def ask_question(question, index, chunks, history=None, return_indices=False):
 def stream_ask_question(question, index, chunks, history=None):
     """Generator version of ask_question that yields word-by-word chunks"""
     q_embedding = model.encode([question], convert_to_numpy=True)
-    D, I = index.search(np.array(q_embedding, dtype='float32'), k=2)
+    # Retrieve top 15 candidates to have more options after rule filtering
+    D, I = index.search(np.array(q_embedding, dtype='float32'), k=15)
 
     context = ""
-    matched_indices = I[0].tolist()
-    for i in matched_indices:
-        context += chunks[i] + "\n"
+    matched_indices = []
+    valid_chunks = []
+    
+    # Check if user is asking about a specific rule
+    rule_pattern = extract_rule_number(question)
+    
+    # Get candidates
+    candidate_chunks = [chunks[int(idx)] for idx in I[0]]
+    candidate_indices = [int(idx) for idx in I[0]]
+    
+    # If asking about a specific rule, filter to only that rule
+    if rule_pattern:
+        filtered_chunks, filtered_indices = filter_by_rule(candidate_chunks, candidate_indices, rule_pattern)
+        if filtered_chunks:  # Use filtered results if we found the rule
+            candidate_chunks = filtered_chunks
+            candidate_indices = filtered_indices
+    
+    # Build context from filtered chunks
+    for chunk in candidate_chunks:
+        if not is_noisy_chunk(chunk):
+            valid_chunks.append(chunk)
+            matched_indices.append(candidate_indices[candidate_chunks.index(chunk)])
+            context += chunk + "\n"
+    
+    # If we filtered out too many chunks, include some noisy ones (better than empty context)
+    if len(valid_chunks) < 3:
+        for chunk in candidate_chunks:
+            if chunk not in valid_chunks:
+                valid_chunks.append(chunk)
+                matched_indices.append(candidate_indices[candidate_chunks.index(chunk)])
+                context += chunk + "\n"
+                if len(valid_chunks) >= 3:
+                    break
 
     history_text = ""
     if history:
@@ -220,7 +349,7 @@ def stream_ask_question(question, index, chunks, history=None):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Previous Conversation:\n{history_text}\n\nContext:\n{context}\n\nQuestion: {question}"}
             ],
-            options={"num_predict": 512, "temperature": 0.1},
+            options={"num_predict": 1024, "temperature": 0.1},
             stream=True
         )
         
@@ -231,13 +360,24 @@ def stream_ask_question(question, index, chunks, history=None):
     except Exception as e:
         yield f"\n\n⚠️ **Error streaming from Ollama:** {str(e)}"
 
-SYSTEM_PROMPT = """You are an enterprise assistant providing clear, short, well-structured information.
-Format your responses with:
-- Clear headings (## or ###)
-- Numbered lists or bullet points
-- Bold text for **key terms**
-NO ASCII ART. Use clean text formatting ONLY.
-If information is not in context, say: 'This information is not available in the document.'"""
+SYSTEM_PROMPT = """You are a focused maritime assistant answering specific questions about Navigation Rules (COLREGs).
+
+CRITICAL INSTRUCTION: Answer ONLY the specific question asked. Do NOT elaborate on related rules, surrounding topics, or general information.
+
+When answering:
+1. ## Rule Number and Title (if applicable)
+2. **Direct Answer**: Provide the specific information requested, nothing more.
+3. Include **Lights**, **Shapes**, or **Sound Signals** ONLY if directly asked about them.
+4. Use bullet points for specifications requested.
+
+STRICT RULES:
+- ANSWER ONLY WHAT WAS ASKED. Do not discuss related rules or surrounding topics.
+- Use ONLY the official legal text from context. Ignore repetitive placeholder descriptions like "Upper Light: A single line..."
+- Keep responses concise. One paragraph for simple questions, 2-3 for complex ones.
+- Do NOT add background information, explanations of related rules, or general context unless specifically requested.
+- If asked "What is Rule 27?", answer only about Rule 27. Do NOT mention Rule 26 or Rule 28.
+- Do NOT output images or URLs. System displays them automatically.
+- If information is not in context, say: 'This specific information is not available in the uploaded files.'"""
 
 
 # ----------- GRID OVERLAY HELPER -----------
