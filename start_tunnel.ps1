@@ -7,7 +7,14 @@ Write-Host "Starting RAG Assistant Cloud Deployment..." -ForegroundColor Cyan
 Write-Host "Launching FastAPI Backend on port 8000..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; python main.py"
 
-# 2. Start Cloudflare Quick Tunnel
+# 2. Check for cloudflared
+$cfExe = "cloudflared"
+if (Test-Path ".\cloudflared.exe") {
+    $cfExe = ".\cloudflared.exe"
+    Write-Host "Found local cloudflared.exe" -ForegroundColor Gray
+}
+
+# Start Cloudflare Quick Tunnel
 Write-Host "Creating Secure Public Tunnel..." -ForegroundColor Yellow
 Write-Host "Note: If you do not have 'cloudflared' installed, download it from https://github.com/cloudflare/cloudflared/releases" -ForegroundColor Gray
 
@@ -16,7 +23,7 @@ $tmpFile = "$env:TEMP\tunnel_out.txt"
 if (Test-Path $tmpFile) { Remove-Item $tmpFile }
 
 # Start cloudflared and wait for it to generate a URL
-$process = Start-Process cloudflared -ArgumentList "tunnel", "--url", "http://localhost:8000" -NoNewWindow -PassThru -RedirectStandardError $tmpFile
+$process = Start-Process $cfExe -ArgumentList "tunnel", "--url", "http://localhost:8000" -NoNewWindow -PassThru -RedirectStandardError $tmpFile
 
 Write-Host "Waiting for public URL..." -ForegroundColor Gray
 $tunnelUrl = ""
