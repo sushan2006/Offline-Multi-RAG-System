@@ -39,7 +39,7 @@ if ($tunnelUrl) {
     
     # Update config.js with the new URL
     $configPath = "frontend/config.js"
-    $configContent = @"
+$configContent = @"
 // 🌐 RAG Assistant Configuration
 // This file is used to store global settings for the frontend.
 const API_CONFIG = {
