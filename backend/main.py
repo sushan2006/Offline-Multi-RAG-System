@@ -368,7 +368,21 @@ def get_metadata_for_answer(answer: str, question: str, matched_indices: List[in
                 except: related_images.append(img)
     
     if not related_images and candidate_images:
-        related_images = candidate_images
+        # If it was a BROAD diagram request, we MUST be strict. 
+        # Don't show everything if we couldn't find the specific rule.
+        if is_diagram_request:
+            # Re-filter candidate_images to ONLY those on the matched pages (original safe behavior)
+            for img in candidate_images:
+                for prefix in image_prefixes:
+                    if img.startswith(prefix):
+                        related_images.append(img)
+                        break
+        else:
+            # Normal mode: showing page-specific candidates is the goal
+            related_images = candidate_images
+    
+    # Final safety: remove duplicates
+    related_images = list(set(related_images))
     
     store_images_for_user(username, related_images)
     
