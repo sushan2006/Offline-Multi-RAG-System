@@ -406,7 +406,10 @@
 
     </div>
 
+    <script src="config.js"></script>
     <script>
+        const API_BASE = ""; // Relative paths for universal compatibility
+
         async function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
@@ -426,7 +429,7 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch('http://127.0.0.1:8000/login', {
+                const res = await fetch(`${API_BASE}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })

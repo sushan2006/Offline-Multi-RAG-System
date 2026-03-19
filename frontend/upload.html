@@ -172,7 +172,9 @@
     </main>
   </div>
 
+  <script src="config.js"></script>
   <script>
+    const API_BASE = ""; // Relative paths for universal compatibility
     const token = localStorage.getItem('token');
     if (!token) { alert('Please login first'); window.location.href = 'login.html'; }
 
@@ -223,7 +225,7 @@
       fd.append('role', role);
 
       try {
-        const res = await fetch('http://127.0.0.1:8000/upload', {
+        const res = await fetch(`${API_BASE}/upload`, {
           method: 'POST', body: fd,
           headers: { 'Authorization': 'Bearer ' + token }
         });

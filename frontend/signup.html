@@ -389,7 +389,9 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
+        const API_BASE = ""; // Relative paths for universal compatibility
         function checkPassword() {
             const pw = document.getElementById('password').value;
             const bar = document.getElementById('strengthBar');
@@ -417,7 +419,7 @@
             btn.innerText = '⏳ Creating…'; btn.disabled = true;
 
             try {
-                const res = await fetch('http://127.0.0.1:8000/signup', {
+                const res = await fetch(`${API_BASE}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password, role })

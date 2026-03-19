@@ -363,9 +363,10 @@
         </main>
     </div>
 
+    <script src="config.js"></script>
     <script>
+        const API_BASE = ""; // Relative paths for universal compatibility
         const token = localStorage.getItem('token');
-        const API_BASE = 'http://127.0.0.1:8000';
 
         function showTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
