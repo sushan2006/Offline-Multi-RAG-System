@@ -1,224 +1,256 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Upload — RAG Assistant</title>
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-        .upload-area {
-            border: 2px dashed rgba(6, 214, 160, 0.3);
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            background: linear-gradient(135deg, rgba(6, 214, 160, 0.05) 0%, rgba(6, 214, 160, 0.02) 100%);
-        }
 
-        .upload-area:hover {
-            border-color: var(--accent);
-            background: linear-gradient(135deg, rgba(6, 214, 160, 0.1) 0%, rgba(6, 214, 160, 0.05) 100%);
-            box-shadow: 0 0 20px rgba(6, 214, 160, 0.2);
-        }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upload — RAG Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .upload-icon {
+      font-size: 52px;
+      display: inline-block;
+      animation: floatIcon 3s ease-in-out infinite;
+      margin-bottom: 14px;
+    }
 
-        .upload-area.drag-over {
-            border-color: var(--accent);
-            background: linear-gradient(135deg, rgba(6, 214, 160, 0.15) 0%, rgba(6, 214, 160, 0.08) 100%);
-            box-shadow: 0 0 30px rgba(6, 214, 160, 0.3);
-        }
+    @keyframes floatIcon {
 
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        #file {
-            display: none;
-        }
-
-        .file-selected {
-            color: var(--accent);
-            font-weight: 600;
-            padding: 8px 12px;
-            background: rgba(6, 214, 160, 0.1);
-            border-radius: 8px;
-            margin-top: 12px;
-            display: inline-block;
-            border: 1px solid rgba(6, 214, 160, 0.3);
-        }
-
-        select {
-            width: 100%;
-        }
-
-        .upload-status {
-            padding: 16px;
-            border-radius: 12px;
-            margin-top: 16px;
-            display: none;
-        }
-
-        .upload-status.success {
-            background: rgba(81, 207, 102, 0.1);
-            border: 1px solid rgba(81, 207, 102, 0.3);
-            color: #51cf66;
-            display: block;
-        }
-
-        .upload-status.error {
-            background: rgba(255, 107, 107, 0.1);
-            border: 1px solid rgba(255, 107, 107, 0.3);
-            color: #ff6b6b;
-            display: block;
-        }
-    </style>
-  </head>
-  <body>
-    <div class="app">
-      <aside class="sidebar">
-        <div class="brand">✨ RAG Assistant</div>
-        <div class="nav">
-          <a href="chat.html">💬 Chat</a>
-          <a href="upload.html" class="active">📤 Upload</a>
-        </div>
-        <div style="margin-top:auto;padding-top:20px;border-top:1px solid rgba(6,214,160,0.1);">
-          <a href="login.html" onclick="localStorage.removeItem('role'); localStorage.removeItem('token');" style="color:rgba(255,107,107,0.8);text-decoration:none;display:block;font-size:13px;font-weight:500;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.color='#ff6b6b'" onmouseout="this.style.color='rgba(255,107,107,0.8)'">🚪 Logout</a>
-        </div>
-      </aside>
-
-      <main class="panel">
-        <div style="margin-bottom: 32px;">
-          <h3 style="margin:0 0 8px 0; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-            📚 Upload Documents
-          </h3>
-          <p style="color: var(--muted); margin: 4px 0 0 0; font-size: 13px;">Add knowledge to your RAG system</p>
-        </div>
-
-        <div class="upload-area" id="uploadArea" onclick="document.getElementById('file').click()">
-          <div class="upload-icon">📥</div>
-          <div style="font-weight: 600; color: var(--accent); margin-bottom: 8px;">Drop your PDF here</div>
-          <div style="color: var(--muted); font-size: 13px;">or click to browse</div>
-          <div id="fileName" class="file-selected" style="display: none;"></div>
-        </div>
-
-        <div class="form-group" style="margin-top: 24px;">
-          <label class="small muted">📋 Assign Category</label>
-          <select id="role" style="padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(6, 214, 160, 0.2); background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); color: inherit; font-family: inherit; font-size: 14px; cursor: pointer;">
-            <option value="HR">📊 HR — Human Resources</option>
-            <option value="DEV">⚙️ DEV — Development</option>
-            <option value="ADMIN">👑 ADMIN — Administration</option>
-          </select>
-        </div>
-
-        <div style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;">
-          <button class="primary" onclick="upload()" style="padding: 14px 24px;">
-            🚀 Upload
-          </button>
-          <div id="msg" class="small muted" style="flex: 1; min-height: 16px;"></div>
-        </div>
-
-        <div id="status" class="upload-status"></div>
-      </main>
-    </div>
-
-    <script>
-      const uploadArea = document.getElementById('uploadArea');
-      const fileInput = document.getElementById('file');
-      const fileNameEl = document.getElementById('fileName');
-
-      // Drag and drop
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-      });
-
-      function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
+      0%,
+      100% {
+        transform: translateY(0);
       }
 
-      ['dragenter', 'dragover'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, () => {
-          uploadArea.classList.add('drag-over');
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    #file {
+      display: none;
+    }
+
+    .file-selected {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 7px 14px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 8px;
+      color: #c084fc;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .panel-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      background: linear-gradient(135deg, #c084fc 0%, #e879f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .logout-btn {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      width: 100%;
+      transition: all 0.22s;
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.3);
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(244, 63, 94, 0.45);
+    }
+
+    select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .upload-btn {
+      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #c026d3 100%);
+      color: #fff;
+      border: none;
+      padding: 13px 28px;
+      border-radius: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.25s;
+      box-shadow: 0 5px 20px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.4s;
+    }
+
+    .upload-btn:hover::after {
+      left: 160%;
+    }
+
+    .upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.55);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(216, 180, 254, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">✨ RAG Assistant</div>
+      <nav class="nav">
+        <a href="chat.html">💬 Chat</a>
+        <a href="upload.html" class="active">📤 Upload</a>
+      </nav>
+
+      <div style="margin-top:auto; padding-top:20px; border-top:1px solid rgba(168,85,247,0.15);">
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <main class="panel">
+      <div style="margin-bottom:28px;">
+        <div class="panel-title">📚 Upload Documents</div>
+        <p style="color:var(--muted); font-size:13px; margin:4px 0 0;">Add knowledge files to your RAG system</p>
+      </div>
+
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('file').click()">
+        <div class="upload-icon">📥</div>
+        <div style="font-weight:600; color:#c084fc; margin-bottom:6px; font-size:15px;">Drop your PDF here</div>
+        <div style="color:var(--muted); font-size:13px;">or click to browse files</div>
+        <div id="fileName" class="file-selected" style="display:none;"></div>
+      </div>
+      <input type="file" id="file" accept=".pdf" />
+
+      <div style="margin-top:22px;">
+        <label class="form-label">📋 Assign Role Category</label>
+        <select id="role">
+          <option value="HR">📊 HR — Human Resources</option>
+          <option value="DEV">⚙️ DEV — Development</option>
+          <option value="ADMIN">👑 ADMIN — Administration</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center; margin-top:22px;">
+        <button class="upload-btn" onclick="upload()">🚀 Upload</button>
+        <span id="msg" style="font-size:13px; color:var(--muted);"></span>
+      </div>
+
+      <div id="status" class="upload-status"></div>
+    </main>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) { alert('Please login first'); window.location.href = 'login.html'; }
+
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('file');
+    const fileNameEl = document.getElementById('fileName');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+      uploadArea.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+    });
+    ['dragenter', 'dragover'].forEach(ev => uploadArea.addEventListener(ev, () => uploadArea.classList.add('drag-over')));
+    ['dragleave', 'drop'].forEach(ev => uploadArea.addEventListener(ev, () => uploadArea.classList.remove('drag-over')));
+
+    uploadArea.addEventListener('drop', e => {
+      fileInput.files = e.dataTransfer.files;
+      updateFileName();
+    });
+    fileInput.addEventListener('change', updateFileName);
+
+    function updateFileName() {
+      if (fileInput.files.length > 0) {
+        fileNameEl.innerText = '✓ ' + fileInput.files[0].name;
+        fileNameEl.style.display = 'inline-block';
+      } else {
+        fileNameEl.style.display = 'none';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('role');
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+
+    async function upload() {
+      const role = document.getElementById('role').value;
+      const msgEl = document.getElementById('msg');
+      const statusEl = document.getElementById('status');
+
+      if (!fileInput.files.length) { msgEl.innerText = '⚠️ Choose a PDF file'; return; }
+
+      msgEl.innerText = '⏳ Uploading…';
+      statusEl.className = 'upload-status';
+      statusEl.innerText = '';
+
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      fd.append('role', role);
+
+      try {
+        const res = await fetch('http://127.0.0.1:8000/upload', {
+          method: 'POST', body: fd,
+          headers: { 'Authorization': 'Bearer ' + token }
         });
-      });
 
-      ['dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, () => {
-          uploadArea.classList.remove('drag-over');
-        });
-      });
+        if (res.status === 401) {
+          alert('Session expired. Please login again.');
+          logout();
+          return;
+        }
 
-      uploadArea.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files;
-        updateFileName();
-      });
-
-      fileInput.addEventListener('change', updateFileName);
-
-      function updateFileName() {
-        if (fileInput.files.length > 0) {
-          fileNameEl.innerText = '✓ ' + fileInput.files[0].name;
-          fileNameEl.style.display = 'inline-block';
+        const data = await res.json();
+        msgEl.innerText = '';
+        if (data.message) {
+          statusEl.className = 'upload-status success';
+          statusEl.innerText = '✅ ' + (data.message || 'Uploaded successfully!');
+          fileInput.value = ''; updateFileName();
         } else {
-          fileNameEl.style.display = 'none';
-        }
-      }
-
-      async function upload(){
-        const fileInput = document.getElementById('file');
-        const role = document.getElementById('role').value;
-        const msgEl = document.getElementById('msg');
-        const statusEl = document.getElementById('status');
-
-        if(!fileInput.files.length){ 
-          msgEl.innerText = '⚠️ Choose a PDF file';
-          return; 
-        }
-
-        msgEl.innerText = '⏳ Uploading...';
-        statusEl.className = 'upload-status';
-        statusEl.innerText = '';
-
-        const fd = new FormData();
-        fd.append('file', fileInput.files[0]);
-        fd.append('role', role);
-
-        try{
-          const token = localStorage.getItem('token');
-          const res = await fetch('http://127.0.0.1:8000/upload',{
-            method:'POST',
-            body:fd, 
-            headers: { 'Authorization': 'Bearer ' + token }
-          });
-          const data = await res.json();
-          
-          if(data.message) {
-            msgEl.innerText = '';
-            statusEl.className = 'upload-status success';
-            statusEl.innerText = '✅ ' + (data.message || 'File uploaded successfully!');
-            fileInput.value = '';
-            updateFileName();
-          } else {
-            statusEl.className = 'upload-status error';
-            statusEl.innerText = '❌ ' + (data.detail || 'Upload failed');
-            msgEl.innerText = '';
-          }
-        }catch(e){ 
           statusEl.className = 'upload-status error';
-          statusEl.innerText = '❌ Upload error: ' + e.message;
-          msgEl.innerText = '';
+          statusEl.innerText = '❌ ' + (data.detail || 'Upload failed');
         }
+      } catch (e) {
+        msgEl.innerText = '';
+        statusEl.className = 'upload-status error';
+        statusEl.innerText = '❌ Error: ' + e.message;
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
+
 </html>

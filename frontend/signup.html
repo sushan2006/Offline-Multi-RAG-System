@@ -1,245 +1,446 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sign Up — RAG Assistant</title>
-        <link rel="stylesheet" href="styles.css" />
-        <style>
-            .login-container {
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                overflow: hidden;
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sign Up — RAG Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: linear-gradient(160deg, #1a0533 0%, #2d0a5c 25%, #4b1080 50%, #3a1260 75%, #1c0444 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            animation: drift 18s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
+            top: -140px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 340px;
+            height: 340px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+            bottom: -80px;
+            right: -60px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 70%);
+            top: 55%;
+            left: 65%;
+            animation-delay: -12s;
+        }
+
+        @keyframes drift {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
             }
 
-            .login-container::before {
-                content: '';
-                position: absolute;
-                top: -50%;
-                left: -50%;
-                width: 200%;
-                height: 200%;
-                background: radial-gradient(circle, rgba(6, 214, 160, 0.1) 0%, transparent 70%);
-                animation: float 20s ease-in-out infinite;
-                pointer-events: none;
+            33% {
+                transform: translate(40px, -50px) scale(1.08);
             }
 
-            @keyframes float {
-                0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                50% { transform: translate(50px, -50px) rotate(180deg); }
+            66% {
+                transform: translate(-30px, 30px) scale(0.95);
+            }
+        }
+
+        .card {
+            position: relative;
+            z-index: 10;
+            width: 420px;
+            padding: 44px 40px 38px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 1px rgba(168, 85, 247, 0.15);
+            animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 16px;
+            right: 16px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(32px) scale(0.96);
             }
 
-            .card {
-                position: relative;
-                z-index: 1;
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 18px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            box-shadow: 0 8px 28px rgba(168, 85, 247, 0.55);
+            font-size: 26px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 28px rgba(168, 85, 247, 0.55);
             }
 
-            .form-input {
-                transition: all 0.3s ease;
+            50% {
+                box-shadow: 0 8px 40px rgba(168, 85, 247, 0.85), 0 0 60px rgba(168, 85, 247, 0.2);
             }
+        }
 
-            .form-input:focus {
-                transform: translateY(-2px);
-            }
+        .card-title {
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            font-size: 26px;
+            letter-spacing: -0.6px;
+            text-align: center;
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 50%, #f0abfc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
 
-            .signup-btn {
-                width: 100%;
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-            }
+        .card-sub {
+            text-align: center;
+            font-size: 13px;
+            color: rgba(216, 180, 254, 0.6);
+            margin-bottom: 28px;
+        }
 
-            .signup-btn::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-                transition: left 0.3s ease;
-            }
+        .field {
+            margin-bottom: 16px;
+        }
 
-            .signup-btn:hover::before {
-                left: 100%;
-            }
+        .field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(216, 180, 254, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 7px;
+        }
 
-            .login-link {
-                text-align: center;
-                margin-top: 20px;
-                color: rgba(255, 255, 255, 0.5);
-                font-size: 13px;
-            }
+        .input-wrap {
+            position: relative;
+        }
 
-            .login-link a {
-                color: var(--accent);
-                text-decoration: none;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
+        .input-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 15px;
+            pointer-events: none;
+            opacity: 0.6;
+        }
 
-            .login-link a:hover {
-                color: var(--accent-light);
-                text-decoration: underline;
-            }
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 13px 14px 13px 40px;
+            border-radius: 13px;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f3e8ff;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.25s ease;
+            appearance: none;
+            -webkit-appearance: none;
+        }
 
-            .input-icon {
-                position: absolute;
-                left: 12px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--accent);
-                font-size: 16px;
-            }
+        .field input::placeholder {
+            color: rgba(216, 180, 254, 0.35);
+        }
 
-            .form-group-icon input,
-            .form-group-icon select {
-                padding-left: 36px !important;
-            }
+        .field input:focus,
+        .field select:focus {
+            border-color: rgba(168, 85, 247, 0.7);
+            background: rgba(168, 85, 247, 0.1);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 4px 20px rgba(168, 85, 247, 0.12);
+            transform: translateY(-1px);
+        }
 
-            .password-strength {
-                height: 3px;
-                border-radius: 2px;
-                margin-top: 6px;
-                background: rgba(255, 255, 255, 0.1);
-                overflow: hidden;
-            }
+        .field select option {
+            background: #2d0a5c;
+            color: #f3e8ff;
+        }
 
-            .password-strength-bar {
-                height: 100%;
-                width: 0%;
-                transition: width 0.3s ease, background-color 0.3s ease;
-                background: #ff6b6b;
-            }
+        /* password strength */
+        .strength-wrap {
+            margin-top: 6px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
 
-            .password-strength-bar.medium {
-                background: #ffd43b;
-            }
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.3s, background 0.3s;
+            background: #f43f5e;
+        }
 
-            .password-strength-bar.strong {
-                background: #51cf66;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="login-container">
-            <div class="card">
-                <div style="text-align: center; margin-bottom: 32px;">
-                    <div style="font-size: 48px; margin-bottom: 12px;">🚀</div>
-                    <h2 style="margin:0;">Create Account</h2>
-                    <p style="color: var(--muted); margin: 8px 0 0 0; font-size: 13px;">Join the RAG Assistant community</p>
-                </div>
+        .strength-bar.med {
+            background: #f59e0b;
+        }
 
-                <div class="form-group">
-                    <label class="small muted">Username</label>
-                    <div class="form-group-icon" style="position: relative;">
-                        <span class="input-icon">👤</span>
-                        <input id="username" class="form-input" placeholder="Choose a username">
-                    </div>
-                </div>
+        .strength-bar.good {
+            background: #86efac;
+        }
 
-                <div class="form-group">
-                    <label class="small muted">Password</label>
-                    <div class="form-group-icon" style="position: relative;">
-                        <span class="input-icon">🔑</span>
-                        <input id="password" class="form-input" type="password" placeholder="Create a password" oninput="checkPassword()">
-                    </div>
-                    <div class="password-strength">
-                        <div class="password-strength-bar" id="strengthBar"></div>
-                    </div>
-                </div>
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            margin-top: 24px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Sora', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #c026d3 100%);
+            color: #fff;
+            box-shadow: 0 6px 30px rgba(168, 85, 247, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
 
-                <div class="form-group">
-                    <label class="small muted">Role</label>
-                    <div class="form-group-icon" style="position: relative;">
-                        <span class="input-icon">👑</span>
-                        <select id="role" style="padding: 12px 16px 12px 36px; border-radius: 10px; border: 1px solid rgba(6, 214, 160, 0.2); background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); color: inherit; font-family: inherit; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">
-                            <option value="HR">📊 HR — Human Resources</option>
-                            <option value="DEV">⚙️ DEV — Development</option>
-                            <option value="ADMIN">👑 ADMIN — Administration</option>
-                        </select>
-                    </div>
-                </div>
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.45s ease;
+        }
 
-                <button class="primary signup-btn" onclick="signup()" style="margin-top: 24px;">
-                    ✨ Create Account
-                </button>
+        .btn-primary:hover::after {
+            left: 160%;
+        }
 
-                <div id="msg" style="color:var(--accent);font-weight:600;margin-top:16px;text-align:center;min-height:20px;"></div>
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 45px rgba(168, 85, 247, 0.65);
+        }
 
-                <div class="login-link">
-                    Already have an account? <a href="login.html">Sign in here</a>
-                </div>
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        #msg {
+            min-height: 20px;
+            margin-top: 12px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        #msg.success {
+            color: #86efac;
+        }
+
+        #msg.error {
+            color: #f9a8d4;
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: rgba(216, 180, 254, 0.5);
+        }
+
+        .footer-link a {
+            color: #c084fc;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-link a:hover {
+            color: #e9d5ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="card">
+        <div class="logo-wrap">🚀</div>
+        <h1 class="card-title">Create Account</h1>
+        <p class="card-sub">Join the RAG Assistant community</p>
+
+        <div class="field">
+            <label>Username</label>
+            <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input id="username" type="text" placeholder="Choose a username" autocomplete="username" />
             </div>
         </div>
 
-        <script>
-            function checkPassword() {
-                const password = document.getElementById('password').value;
-                const strengthBar = document.getElementById('strengthBar');
-                
-                let strength = 0;
-                if (password.length >= 6) strength++;
-                if (password.length >= 10) strength++;
-                if (/[A-Z]/.test(password)) strength++;
-                if (/[0-9]/.test(password)) strength++;
-                if (/[^A-Za-z0-9]/.test(password)) strength++;
+        <div class="field">
+            <label>Password</label>
+            <div class="input-wrap">
+                <span class="input-icon">🔑</span>
+                <input id="password" type="password" placeholder="Create a strong password" oninput="checkPassword()"
+                    autocomplete="new-password" />
+            </div>
+            <div class="strength-wrap">
+                <div class="strength-bar" id="strengthBar"></div>
+            </div>
+        </div>
 
-                strengthBar.style.width = (strength * 20) + '%';
-                strengthBar.classList.remove('medium', 'strong');
-                
-                if (strength >= 4) {
-                    strengthBar.classList.add('strong');
-                } else if (strength >= 2) {
-                    strengthBar.classList.add('medium');
+        <div class="field">
+            <label>Role</label>
+            <div class="input-wrap">
+                <span class="input-icon">👑</span>
+                <select id="role">
+                    <option value="HR">📊 HR — Human Resources</option>
+                    <option value="DEV">⚙️ DEV — Development</option>
+                    <option value="ADMIN">👑 ADMIN — Administration</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="signupBtn" onclick="signup()">✨ Create Account</button>
+
+        <div id="msg"></div>
+
+        <div class="footer-link">
+            Already have an account? <a href="login.html">Sign in here</a>
+        </div>
+    </div>
+
+    <script>
+        function checkPassword() {
+            const pw = document.getElementById('password').value;
+            const bar = document.getElementById('strengthBar');
+            let s = 0;
+            if (pw.length >= 6) s++;
+            if (pw.length >= 10) s++;
+            if (/[A-Z]/.test(pw)) s++;
+            if (/[0-9]/.test(pw)) s++;
+            if (/[^A-Za-z0-9]/.test(pw)) s++;
+            bar.style.width = (s * 20) + '%';
+            bar.className = 'strength-bar' + (s >= 4 ? ' good' : s >= 2 ? ' med' : '');
+        }
+
+        async function signup() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const msg = document.getElementById('msg');
+            const btn = document.getElementById('signupBtn');
+
+            msg.className = ''; msg.innerText = '';
+            if (!username || !password) { msg.className = 'error'; msg.innerText = '⚠️ Please fill all fields'; return; }
+            if (password.length < 6) { msg.className = 'error'; msg.innerText = '⚠️ Password must be at least 6 characters'; return; }
+
+            btn.innerText = '⏳ Creating…'; btn.disabled = true;
+
+            try {
+                const res = await fetch('http://127.0.0.1:8000/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, role })
+                });
+                const data = await res.json();
+                if (data.message) {
+                    msg.className = 'success';
+                    msg.innerText = '✅ Account created! Redirecting…';
+                    setTimeout(() => location.href = 'login.html', 1000);
+                } else {
+                    msg.className = 'error';
+                    msg.innerText = '❌ ' + (data.detail || 'Signup failed');
+                    btn.innerText = '✨ Create Account'; btn.disabled = false;
                 }
+            } catch (e) {
+                msg.className = 'error';
+                msg.innerText = '❌ Error: ' + e.message;
+                btn.innerText = '✨ Create Account'; btn.disabled = false;
             }
+        }
 
-            async function signup(){
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const role = document.getElementById('role').value;
-                const msgEl = document.getElementById('msg');
+        document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') signup(); });
+    </script>
+</body>
 
-                if(!username||!password){ 
-                    msgEl.innerText = '⚠️ Fill all fields'; 
-                    return; 
-                }
-
-                if(password.length < 6) {
-                    msgEl.innerText = '⚠️ Password must be at least 6 characters';
-                    return;
-                }
-
-                try{
-                    const res = await fetch('http://127.0.0.1:8000/signup',{
-                        method:'POST',
-                        headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify({username, password, role})
-                    });
-                    const data = await res.json();
-                    
-                    if(data.message){
-                        msgEl.innerText = '✅ Account created! Redirecting...';
-                        setTimeout(()=>location.href='login.html', 1000);
-                    } else { 
-                        msgEl.innerText = '❌ ' + (data.detail || 'Signup failed'); 
-                    }
-                }catch(e){ 
-                    msgEl.innerText = '❌ Error: '+e.message;
-                }
-            }
-
-            document.getElementById('role').addEventListener('change', (e) => {
-                e.target.blur();
-            });
-
-            document.getElementById('password').addEventListener('keydown', (e) => {
-                if(e.key === 'Enter') signup();
-            });
-        </script>
-    </body>
 </html>

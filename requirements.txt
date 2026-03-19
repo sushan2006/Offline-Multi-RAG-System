@@ -1,7 +1,12 @@
+# For GPU (RTX 5050): Install PyTorch with CUDA FIRST, then run this file.
+# See SETUP_GPU.md for full instructions.
+# Example: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
 fastapi
 uvicorn
 sentence-transformers
 faiss-cpu
+# Optional for GPU vector search (reduces CPU load): pip install faiss-gpu
 pypdf
 ollama
 numpy

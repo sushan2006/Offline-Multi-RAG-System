@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -7,29 +8,20 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {
-            --accent: #06d6a0;
-            --accent-light: #34ffa6;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-
         @keyframes glow {
-            0%   { box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
-            50%  { box-shadow: 0 0 30px rgba(6, 214, 160, 0.8); }
-            100% { box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 28px rgba(168, 85, 247, 0.85);
+            }
         }
 
         .listening {
-            animation: glow 1.5s ease-in-out infinite;
-        }
-
-        #historyList {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(6, 214, 160, 0.3) transparent;
+            animation: glow 1.4s ease-in-out infinite;
         }
 
         #historyList::-webkit-scrollbar {
@@ -41,132 +33,234 @@
         }
 
         #historyList::-webkit-scrollbar-thumb {
-            background: rgba(6, 214, 160, 0.3);
+            background: rgba(168, 85, 247, 0.3);
             border-radius: 2px;
         }
 
         #historyList::-webkit-scrollbar-thumb:hover {
-            background: rgba(6, 214, 160, 0.6);
+            background: rgba(168, 85, 247, 0.6);
         }
 
         .history-item {
+            cursor: pointer;
+            font-size: 12px;
+            color: rgba(216, 180, 254, 0.7);
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(168, 85, 247, 0.12);
+            word-break: break-word;
             transition: all 0.2s ease;
         }
 
         .history-item:hover {
-            background: rgba(6, 214, 160, 0.2) !important;
-            transform: translateX(4px);
+            background: rgba(168, 85, 247, 0.15);
+            border-color: rgba(168, 85, 247, 0.3);
+            transform: translateX(3px);
+            color: #e9d5ff;
         }
 
         .new-chat-btn {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            color: #000;
+            width: 100%;
+            margin-top: 18px;
+            padding: 11px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            color: #fff;
             font-weight: 700;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
+            font-size: 13.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+            transition: all 0.22s;
         }
 
         .new-chat-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(6, 214, 160, 0.4);
+            box-shadow: 0 6px 24px rgba(168, 85, 247, 0.5);
         }
 
         .voice-btn {
-            background: linear-gradient(135deg, #1a3a3a 0%, #0f2a2a 100%);
-            border: 1px solid rgba(6, 214, 160, 0.3);
-            color: var(--accent);
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #c084fc;
+            padding: 10px 12px;
+            border-radius: 11px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s ease;
         }
 
         .voice-btn:hover {
-            background: linear-gradient(135deg, rgba(6, 214, 160, 0.1) 0%, rgba(6, 214, 160, 0.05) 100%);
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(6, 214, 160, 0.3);
+            background: rgba(168, 85, 247, 0.22);
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 16px rgba(168, 85, 247, 0.3);
         }
 
         .stop-btn {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
             border: none;
-            color: white;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            color: #fff;
+            padding: 9px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.3);
         }
 
         .stop-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.45);
+        }
+
+        .voice-toggle-btn {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.28);
+            color: rgba(216, 180, 254, 0.8);
+            padding: 9px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .voice-toggle-btn:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: rgba(168, 85, 247, 0.5);
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 11px;
+            border-radius: 11px;
+            border: none;
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.3);
+            margin-top: 14px;
+            transition: all 0.22s;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(244, 63, 94, 0.45);
+        }
+
+        .image-result {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(168, 85, 247, 0.07);
+            border: 1px solid rgba(168, 85, 247, 0.22);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .image-result img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .analysis-box {
+            margin-top: 10px;
+            padding: 14px;
+            background: rgba(168, 85, 247, 0.08);
+            border-left: 3px solid rgba(168, 85, 247, 0.5);
+            border-radius: 8px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: rgba(243, 232, 255, 0.88);
+        }
+        /* ── PRINT STYLES ── */
+        @media print {
+            .sidebar, .composer, .nav-toggle, .btn-action, .new-chat-btn, .logout-btn { display: none !important; }
+            .panel { margin-left: 0 !important; width: 100% !important; background: white !important; }
+            .messages { height: auto !important; overflow: visible !important; color: black !important; }
+            .msg { background: #f3f4f6 !important; color: black !important; border: 1px solid #ddd !important; box-shadow: none !important; }
+            .msg.bot { background: #fff !important; }
+            body {
+              background: white !important;
+            }
+            * {
+            print-color-adjust: exact !important;
+            -webkit-print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="app">
+        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="brand">✨ RAG Assistant</div>
-            <div class="nav">
+            <nav class="nav">
                 <a href="chat.html" class="active">💬 Chat</a>
                 <a href="upload.html">📤 Upload</a>
-            </div>
-            <button onclick="startNewChat()" class="new-chat-btn" style="width:100%;margin-top:20px;padding:12px;border-radius:12px;border:none;cursor:pointer;">
-                ➕ New Chat
-            </button>
+            </nav>
 
-            <div style="margin-top:24px;">
-                <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Previous Chats</div>
-                <div id="historyList" style="
-                    display:flex;
-                    flex-direction:column;
-                    gap:6px;
-                    max-height:320px;
-                    overflow-y:auto;
-                "></div>
+            <button class="new-chat-btn" onclick="startNewChat()">➕ New Chat</button>
+
+            <div style="margin-top:22px;">
+                <div
+                    style="font-size:11px; color:rgba(216,180,254,0.45); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.6px; font-weight:600;">
+                    Conversations</div>
+                <div id="historyList"
+                    style="display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto;"></div>
             </div>
 
-            <div style="margin-top:auto;padding-top:20px;border-top:1px solid rgba(6,214,160,0.1);">
+            <div style="margin-top:auto; padding-top:20px; border-top:1px solid rgba(168,85,247,0.15);">
                 <div class="role-badge" id="roleBadge">👤 Role: —</div>
-                <button onclick="logout()" style="width:100%;margin-top:16px;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);color:white;font-weight:600;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 15px rgba(255,107,107,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 25px rgba(255,107,107,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(255,107,107,0.3)'">
-                    🚪 Logout
-                </button>
+                <button class="logout-btn" onclick="logout()">🚪 Logout</button>
             </div>
         </aside>
 
+        <!-- MAIN PANEL -->
         <main class="panel">
             <div class="chat-header">
                 <div>
                     <div class="chat-title">💡 Ask Your Documents</div>
-                    <div class="small muted" id="smallRole" style="margin-top:4px;font-size:12px;"></div>
+                    <div style="font-size:12px; color:var(--muted); margin-top:3px;" id="smallRole"></div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-action" onclick="exportChat('txt')">📄 Export TXT</button>
+                    <button class="btn-action" onclick="exportChat('pdf')">🖨️ Export PDF</button>
                 </div>
             </div>
 
             <div class="messages" id="messages"></div>
 
-            <div style="flex-shrink: 0; margin-top: 12px; padding-bottom: 20px;">
-
+            <div style="flex-shrink:0; margin-top:10px; padding-bottom:16px;">
                 <div class="composer">
-                    <textarea id="question" placeholder="Ask something from the PDF..." rows="2"></textarea>
-                    <button onclick="startVoice()" class="voice-btn" style="padding:10px 12px;border-radius:10px;cursor:pointer;font-size:16px;height:48px;display:flex;align-items:center;justify-content:center;">
-                        🎤
-                    </button>
-                    <button id="sendBtn" style="padding:12px 24px;">Send</button>
+                    <textarea id="question" placeholder="Ask something from your documents..." rows="2"></textarea>
+                    <button class="voice-btn" onclick="startVoice()" title="Voice input">🎤</button>
+                    <button id="sendBtn" style="padding:11px 22px;">Send ➤</button>
                 </div>
-
-                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
-                    <button id="voiceToggle" onclick="toggleVoiceMode()" class="voice-btn" style="padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;">
-                        🎙 Voice: OFF
-                    </button>
-                    <button onclick="stopSpeaking()" class="stop-btn" style="padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;">
-                        🔊 Stop
-                    </button>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                    <button id="voiceToggle" class="voice-toggle-btn" onclick="toggleVoiceMode()">🎙 Voice: OFF</button>
+                    <button class="stop-btn" onclick="stopSpeaking()">🔊 Stop</button>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        // initialize
         let voiceMode = false;
         let recognition;
         let lastInputWasVoice = false;
-        let lastShownImages = [];  // Track last shown images for context
+        let lastShownImages = [];
+        let currentConversationId = null;
 
         const token = localStorage.getItem('token');
         if (!token) { alert('Please login first'); window.location.href = 'login.html'; }
@@ -174,315 +268,286 @@
         document.getElementById('roleBadge').innerText = '👤 Role: ' + role;
         document.getElementById('smallRole').innerText = role;
 
+        if (role === 'ADMIN') {
+            const nav = document.querySelector('.nav');
+            const dashLink = document.createElement('a');
+            dashLink.href = 'admin.html';
+            dashLink.innerText = '📊 Dashboard';
+            nav.appendChild(dashLink);
+        }
+
         const messagesEl = document.getElementById('messages');
 
-        function appendMessage(text, who = 'bot', meta = ''){
+        function appendMessage(text, who = 'bot', meta = '') {
             const div = document.createElement('div');
             div.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
-            
-            // For bot messages, render markdown
             if (who === 'bot') {
-                div.innerHTML = '<div>' + marked.parse(text) + '</div>' + (meta?('<div class="meta">'+meta+'</div>'):'');
+                div.innerHTML = '<div>' + marked.parse(text) + '</div>' + (meta ? '<div class="meta">' + meta + '</div>' : '');
             } else {
-                // For user messages, just show text as-is
-                div.innerHTML = '<div>' + text.replace(/\n/g,'<br>') + '</div>' + (meta?('<div class="meta">'+meta+'</div>'):'');
+                div.innerHTML = '<div>' + text.replace(/\n/g, '<br>') + '</div>' + (meta ? '<div class="meta">' + meta + '</div>' : '');
             }
-            
             messagesEl.appendChild(div);
-            
-            // Scroll to bottom with a slight delay to ensure DOM update
-            setTimeout(() => {
-                messagesEl.scrollTop = messagesEl.scrollHeight;
-            }, 0);
+            setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 0);
         }
 
-        function stopSpeaking(){
-            window.speechSynthesis.cancel();
-        }
-
-        function logout(){
+        function stopSpeaking() { window.speechSynthesis.cancel(); }
+        function logout() {
             localStorage.removeItem('role');
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         }
 
-        function toggleVoiceMode(){
+        // ── EXPORT CHAT ────────────────────────
+        function exportChat(format) {
+            const msgs = document.querySelectorAll('.msg');
+            if (msgs.length === 0) return alert("Nothing to export yet!");
+
+            if (format === 'txt') {
+                let content = `--- CHAT EXPORT (${new Date().toLocaleString()}) ---\n\n`;
+                msgs.forEach(m => {
+                    const isBot = m.classList.contains('bot');
+                    const text = m.innerText.trim();
+                    content += `[${isBot ? 'ASSISTANT' : 'USER'}]:\n${text}\n\n`;
+                    content += "--------------------------------------------------\n\n";
+                });
+                
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `chat_export_${new Date().getTime()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else if (format === 'pdf') {
+                window.print();
+            }
+        }
+        function toggleVoiceMode() {
             voiceMode = !voiceMode;
-            const btn = document.getElementById("voiceToggle");
-            if(voiceMode){
-                btn.innerText = "🎙 Voice: ON";
+            const btn = document.getElementById('voiceToggle');
+            if (voiceMode) {
+                btn.innerText = '🎙 Voice: ON';
+                btn.style.borderColor = 'rgba(168,85,247,0.7)';
+                btn.style.color = '#c084fc';
                 startVoiceConversation();
-            }else{
-                btn.innerText = "🎙 Voice: OFF";
-                btn.classList.remove("listening");
-                if(recognition) recognition.stop();
+            } else {
+                btn.innerText = '🎙 Voice: OFF';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                btn.classList.remove('listening');
+                if (recognition) recognition.stop();
             }
         }
 
-        function startVoiceConversation(){
-            document.getElementById("voiceToggle").classList.add("listening");
-
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Voice not supported in this browser");
-                return;
-            }
-
+        function startVoiceConversation() {
+            document.getElementById('voiceToggle').classList.add('listening');
+            if (!('webkitSpeechRecognition' in window)) { alert('Voice not supported'); return; }
             recognition = new webkitSpeechRecognition();
-            recognition.lang = "en-US";
+            recognition.lang = 'en-US';
             recognition.continuous = false;
             recognition.start();
-
-            recognition.onresult = (event) => {
+            recognition.onresult = event => {
                 const text = event.results[0][0].transcript;
                 lastInputWasVoice = true;
-                document.getElementById("question").value = text;
-                setTimeout(() => {
-                    askQuestion();
-                }, 400);
+                document.getElementById('question').value = text;
+                setTimeout(askQuestion, 400);
             };
         }
 
-        function showTyping(){
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window)) { alert('Voice recognition not supported'); return; }
+            const rec = new webkitSpeechRecognition();
+            rec.lang = 'en-US';
+            rec.interimResults = false;
+            rec.start();
+            rec.onstart = () => appendMessage('🎤 Listening…', 'bot');
+            rec.onresult = event => {
+                document.getElementById('question').value = event.results[0][0].transcript;
+                askQuestion();
+            };
+            rec.onerror = event => console.log('Voice error:', event.error);
+        }
+
+        function showTyping() {
             const div = document.createElement('div');
-            div.className = 'msg bot';
-            div.id = 'typingIndicator';
+            div.className = 'msg bot'; div.id = 'typingIndicator';
             div.innerHTML = 'Thinking<span id="dots">.</span>';
             messagesEl.appendChild(div);
             messagesEl.scrollTop = messagesEl.scrollHeight;
-
             let count = 0;
             window.typingInterval = setInterval(() => {
-                const dots = document.getElementById('dots');
+                const d = document.getElementById('dots');
                 count = (count + 1) % 4;
-                dots.innerText = '.'.repeat(count);
+                if (d) d.innerText = '.'.repeat(count);
             }, 400);
         }
-
-        function startVoice(){
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Voice recognition not supported in this browser");
-                return;
-            }
-
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = "en-US";
-            recognition.interimResults = false;
-            recognition.start();
-
-            recognition.onstart = () => {
-                appendMessage("🎤 Listening...", "bot");
-            };
-
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                document.getElementById("question").value = text;
-                askQuestion();
-            };
-
-            recognition.onerror = (event) => {
-                console.log("Voice error:", event.error);
-            };
-        }
-
-        function hideTyping(){
+        function hideTyping() {
             clearInterval(window.typingInterval);
             const el = document.getElementById('typingIndicator');
-            if(el) el.remove();
+            if (el) el.remove();
         }
 
-        function startNewChat(){
+        function startNewChat() {
+            currentConversationId = null;
+            lastShownImages = [];
             messagesEl.innerHTML = '';
-            appendMessage('🎉 New conversation started. Ask something!', 'bot');
+            appendMessage('👋 New conversation started! Ask something about your documents.', 'bot');
+            loadConversations();
         }
 
-        async function loadHistory(){
-            try{
-                const res = await fetch('http://127.0.0.1:8000/history', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
+        async function loadConversations() {
+            try {
+                const res = await fetch('http://127.0.0.1:8000/conversations', { headers: { 'Authorization': 'Bearer ' + token } });
+
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
 
                 const data = await res.json();
                 const list = document.getElementById('historyList');
                 list.innerHTML = '';
-
-                data.history.reverse().forEach(chat => {
+                (data.conversations || []).forEach(conv => {
                     const item = document.createElement('div');
                     item.className = 'history-item';
-                    item.style.cssText = `
-                        cursor: pointer;
-                        font-size: 12px;
-                        color: rgba(255,255,255,0.7);
-                        padding: 8px 10px;
-                        border-radius: 8px;
-                        background: rgba(255,255,255,0.02);
-                        border: 1px solid rgba(6,214,160,0.1);
-                        word-break: break-word;
-                    `;
-                    item.innerText = '📝 ' + (chat.question.substring(0, 40) + (chat.question.length > 40 ? '...' : ''));
-
-                    item.onclick = () => {
-                        messagesEl.innerHTML = '';
-                        appendMessage(chat.question,'user');
-                        appendMessage(chat.answer,'bot');
-                    };
-
+                    item.innerText = '💬 ' + (conv.title || 'New chat');
+                    item.onclick = () => loadConversation(conv.id);
                     list.appendChild(item);
                 });
-            }catch(e){
-                console.log("History load failed");
-            }
+            } catch (e) { console.log('Conversations load failed', e); }
         }
 
-        function speakText(text){
-            document.getElementById("voiceToggle").classList.remove("listening");
+        async function loadConversation(conversationId) {
+            try {
+                const res = await fetch('http://127.0.0.1:8000/conversations/' + encodeURIComponent(conversationId), { headers: { 'Authorization': 'Bearer ' + token } });
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                const data = await res.json();
+                currentConversationId = data.conversation_id;
+                lastShownImages = [];
+                messagesEl.innerHTML = '';
+                (data.messages || []).forEach(m => { appendMessage(m.question, 'user'); appendMessage(m.answer, 'bot'); });
+                if (!data.messages.length) appendMessage('👋 No messages in this conversation yet.', 'bot');
+                loadConversations();
+            } catch (e) { console.log('Load conversation failed', e); }
+        }
 
+        function speakText(text) {
+            document.getElementById('voiceToggle').classList.remove('listening');
             const speech = new SpeechSynthesisUtterance(text);
             const voices = window.speechSynthesis.getVoices();
-            const femaleVoice = voices.find(v =>
-                v.name.toLowerCase().includes("zira") ||
-                v.name.toLowerCase().includes("google")
-            );
-
-            if (femaleVoice) speech.voice = femaleVoice;
-            speech.rate = 0.95;
-            speech.pitch = 1.2;
-
-            speech.onend = () => {
-                if (voiceMode) {
-                    startVoiceConversation();
-                }
-            };
-
+            const v = voices.find(v => v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('google'));
+            if (v) speech.voice = v;
+            speech.rate = 0.95; speech.pitch = 1.2;
+            speech.onend = () => { if (voiceMode) startVoiceConversation(); };
             window.speechSynthesis.speak(speech);
         }
 
-        async function askQuestion(){
-            if(!voiceMode){
-                lastInputWasVoice = false;
-            }
+        async function ask_stream(q) {
+            appendMessage(q, 'user');
+            
+            // Create a placeholder bot message
+            const botMsgDiv = document.createElement('div');
+            botMsgDiv.className = 'msg bot';
+            botMsgDiv.innerHTML = '<div class="content">Thinking...</div>';
+            messagesEl.appendChild(botMsgDiv);
+            const contentDiv = botMsgDiv.querySelector('.content');
+            messagesEl.scrollTop = messagesEl.scrollHeight;
 
-            const q = document.getElementById('question').value.trim();
-            if (!q) return;
-            appendMessage(q,'user');
-            showTyping();
-
-            document.getElementById('question').value = '';
-
-            try{
-                // Check if user is asking about an image in the current context
-                const isImageQuestion = /highlighted|above image|image|diagram|blueprint|schematic|what.*shown/i.test(q);
-                let requestBody = {question: q, role: role};
-                
-                // If asking about an image and we have a last shown image, include it
-                if (isImageQuestion && lastShownImages.length > 0) {
-                    requestBody.last_image = lastShownImages[0];
-                }
-                
-                const res = await fetch('http://127.0.0.1:8000/ask',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-                    body:JSON.stringify(requestBody)
+            try {
+                const body = { question: q, role, conversation_id: currentConversationId };
+                const res = await fetch('http://127.0.0.1:8000/ask_stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify(body)
                 });
-                const data = await res.json();
+
+                if (res.status === 401) { logout(); return; }
                 
-                // Hide typing indicator before showing answer
-                hideTyping();
-                
-                if (data.answer) {
-                    // Create a container for the response with better structure
-                    const responseContainer = document.createElement('div');
-                    responseContainer.style.cssText = `
-                        display: flex;
-                        flex-direction: column;
-                        gap: 16px;
-                        padding: 0;
-                    `;
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
+                contentDiv.innerText = ""; // Clear "Thinking..."
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
                     
-                    // Add main answer
-                    appendMessage(data.answer, 'bot', 'Source: ' + data.source);
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
                     
-                    // Show images with proper structure if available
-                    if (data.images && data.images.length > 0) {
-                        // Track shown images for context
-                        lastShownImages = data.images;
-                        
-                        data.images.forEach(img => {
-                            const imageWrapper = document.createElement('div');
-                            imageWrapper.style.cssText = `
-                                margin-top: 12px;
-                                padding: 12px;
-                                background: rgba(6, 214, 160, 0.05);
-                                border: 1px solid rgba(6, 214, 160, 0.2);
-                                border-radius: 12px;
-                                overflow: hidden;
-                            `;
-                            
-                            const image = document.createElement('img');
-                            image.src = 'http://127.0.0.1:8000/extracted_images/' + img;
-                            image.style.cssText = `
-                                max-width: 100%;
-                                height: auto;
-                                border-radius: 8px;
-                                display: block;
-                            `;
-                            
-                            // Show highlighted image if available (from image_analysis)
-                            if (data.image_details && data.image_details.length > 0) {
-                                const detail = data.image_details.find(d => d.image === img);
-                                if (detail && detail.highlighted_image) {
-                                    image.src = detail.highlighted_image;
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const data = JSON.parse(line);
+                            if (data.type === "text") {
+                                fullText += data.content;
+                                contentDiv.innerHTML = marked.parse(fullText);
+                                messagesEl.scrollTop = messagesEl.scrollHeight;
+                            } else if (data.type === "info") {
+                                // Show sources
+                                if (data.sources && data.sources.length > 0) {
+                                    const meta = document.createElement('div');
+                                    meta.className = 'meta';
+                                    meta.innerText = 'Source: ' + data.sources.join(', ');
+                                    botMsgDiv.appendChild(meta);
                                 }
+                                // Show images
+                                if (data.images && data.images.length > 0) {
+                                    data.images.forEach(img => {
+                                        const wrapper = document.createElement('div');
+                                        wrapper.className = 'image-result';
+                                        wrapper.innerHTML = `<img src="http://127.0.0.1:8000/extracted_images/${img}" loading="lazy">`;
+                                        messagesEl.appendChild(wrapper);
+                                    });
+                                }
+                            } else if (data.type === "done") {
+                                currentConversationId = data.conversation_id;
+                                loadConversations();
                             }
-                            
-                            imageWrapper.appendChild(image);
-                            messagesEl.appendChild(imageWrapper);
-                        });
+                        } catch (e) {
+                            // Part of a text chunk that isn't JSON-formatted correctly or splitting issues
+                            // In this streaming setup, we mostly expect whole JSON lines
+                        }
                     }
-                    
-                    // Show image interpretations if available
-                    if (data.image_details && data.image_details.length > 0 && data.analysis_type === 'image_analysis') {
-                        data.image_details.forEach(detail => {
-                            if (detail.interpretation) {
-                                const interpretationBox = document.createElement('div');
-                                interpretationBox.style.cssText = `
-                                    margin-top: 12px;
-                                    padding: 16px;
-                                    background: rgba(6, 214, 160, 0.08);
-                                    border-left: 3px solid rgba(6, 214, 160, 0.6);
-                                    border-radius: 8px;
-                                    font-size: 14px;
-                                    line-height: 1.6;
-                                    color: rgba(255, 255, 255, 0.85);
-                                `;
-                                interpretationBox.innerHTML = '<strong>🔍 Image Analysis:</strong><br>' + 
-                                    marked.parse(detail.interpretation);
-                                messagesEl.appendChild(interpretationBox);
-                            }
-                        });
-                    }
-                    
-                    // Scroll to bottom
-                    messagesEl.scrollTop = messagesEl.scrollHeight;
                 }
-                else {
-                    appendMessage('No answer returned from server','bot');
+
+                if (voiceMode || lastInputWasVoice) {
+                    speakText(fullText.replace(/#+\s?/g,'').replace(/\*\*/g,'').substring(0, 400));
                 }
-            }catch(err){
-                hideTyping();
-                appendMessage('❌ Error contacting server: '+err.message,'bot');
+
+            } catch (err) {
+                contentDiv.innerText = '❌ Error: ' + err.message;
             }
         }
 
-        document.getElementById('sendBtn').addEventListener('click', askQuestion);
-        document.getElementById('question').addEventListener('keydown', (e)=>{
-            if (e.key === 'Enter' && !e.shiftKey){
-                e.preventDefault();
-                askQuestion();
+        // Replace original askQuestion call
+        document.getElementById('sendBtn').onclick = () => {
+            const q = document.getElementById('question').value.trim();
+            if (q) {
+                document.getElementById('question').value = '';
+                ask_stream(q);
+            }
+        };
+
+        document.getElementById('question').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                const q = document.getElementById('question').value.trim();
+                if (q) {
+                    document.getElementById('question').value = '';
+                    ask_stream(q);
+                }
             }
         });
 
-        appendMessage('👋 Welcome! Ask a question about your documents.','bot');
-        loadHistory();
+        appendMessage('👋 Welcome! Ask a question about your documents.', 'bot');
+        loadConversations();
     </script>
 </body>
+
 </html>

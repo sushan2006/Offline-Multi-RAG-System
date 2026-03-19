@@ -106,6 +106,22 @@ source venv/bin/activate
 
 ### Step 3: Install Python Dependencies
 
+**🖥️ Using an NVIDIA GPU (RTX 5050, etc.)?** Install PyTorch with CUDA **first**, then the rest:
+
+```bash
+# 1. PyTorch with CUDA (check nvidia-smi for your CUDA version, use cu121/cu124/cu126)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# 2. Then install project dependencies
+pip install -r requirements.txt
+
+# 3. Verify GPU
+python verify_gpu.py
+```
+
+See **[SETUP_GPU.md](SETUP_GPU.md)** for full GPU setup instructions. Without this, embeddings run on CPU.
+
+**CPU-only install:**
 ```bash
 pip install -r requirements.txt
 ```
