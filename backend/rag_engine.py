@@ -25,6 +25,12 @@ model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
 # ----------- PROGRESS TRACKING -----------
 indexing_status = {"percentage": 0, "status": "idle", "current_file": "", "total_files": 0, "processed_files": 0}
 
+# ⭐ GLOBAL STATE FOR CHUNKS
+chunks = []
+chunk_roles = []
+chunk_sources = []
+chunk_pages = []
+
 
 # ----------- READ PDF -----------
 import os
@@ -42,11 +48,7 @@ def load_pdf_text(pdf_path):
 
 
 def load_all_pdfs(folder):
-    global indexing_status
-    chunks = []
-    chunk_roles = []
-    chunk_sources = []
-    chunk_pages = []   # ⭐ NEW
+    global indexing_status, chunks, chunk_roles, chunk_sources, chunk_pages
 
     files = [f for f in os.listdir(folder) if f.endswith(".pdf")]
     total_files = len(files)
